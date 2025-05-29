@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres-container
+    environment:
+      POSTGRES_USER: yuki
+      POSTGRES_PASSWORD: momorio1
+      POSTGRES_DB: reactdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "yuki", "-d", "reactdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    container_name: react-container
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    volumes:
+      - ./frontend:/app
+    working_dir: /app  # 作業ディレクトリを指定
+    command: npm run dev  # Next.js を起動
+
+networks:
+  backend:
+    driver: bridge
+volumes:
+  postgres_data:
